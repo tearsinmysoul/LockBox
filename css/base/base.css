@@ -1,0 +1,15 @@
+/* Сброс стилей и базовые настройки */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    line-height: 2.5;
+    background-color: #fdfdfd;
+    color: ssss#3b3227;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}

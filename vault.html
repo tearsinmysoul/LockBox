@@ -1,0 +1,781 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Моё хранилище — LockBox</title>
+<meta name="description" content="Ваше зашифрованное хранилище LockBox.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%234F7CFF' d='M12 2a5 5 0 0 0-5 5v3H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8a2 2 0 0 0-2-2h-1V7a5 5 0 0 0-5-5Zm-3 8V7a3 3 0 1 1 6 0v3H9Z'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#070B14; --bg2:#0B1220; --card:rgba(255,255,255,.04); --border:rgba(255,255,255,.09);
+  --text:#E9EEF7; --muted:#93A0B4; --blue:#4F7CFF; --cyan:#22D3EE; --green:#34D399; --red:#F87171; --yellow:#FBBF24;
+  --grad:linear-gradient(120deg,#4F7CFF,#22D3EE);
+  --fd:'Space Grotesk',sans-serif; --fb:'Inter',system-ui,sans-serif; --fm:'JetBrains Mono',monospace;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--text);font-family:var(--fb);line-height:1.65;min-height:100vh}
+a{color:inherit;text-decoration:none}
+button{font-family:var(--fb)}
+body::before{content:'';position:fixed;inset:0;z-index:-2;background:
+  radial-gradient(900px 520px at 85% -10%,rgba(79,124,255,.16),transparent 60%),
+  radial-gradient(700px 450px at -10% 30%,rgba(34,211,238,.09),transparent 60%)}
+body::after{content:'';position:fixed;inset:0;z-index:-1;background-image:
+  linear-gradient(rgba(255,255,255,.028) 1px,transparent 1px),
+  linear-gradient(90deg,rgba(255,255,255,.028) 1px,transparent 1px);background-size:44px 44px;
+  -webkit-mask-image:radial-gradient(ellipse at 50% 0%,#000 30%,transparent 72%);
+  mask-image:radial-gradient(ellipse at 50% 0%,#000 30%,transparent 72%)}
+.wrap{max-width:1080px;margin:0 auto;padding:0 26px}
+.grad-text{background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+
+/* ===== Header ===== */
+.site-head{position:sticky;top:0;z-index:50;background:rgba(7,11,20,.78);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-bottom:1px solid var(--border)}
+.head-in{display:flex;align-items:center;justify-content:space-between;height:70px;gap:16px}
+.logo{display:flex;align-items:center;gap:10px;font-family:var(--fd);font-weight:700;font-size:20px;letter-spacing:.2px;flex-shrink:0}
+.logo svg{width:27px;height:27px}
+.head-right{display:flex;align-items:center;gap:12px}
+.user-chip{display:flex;align-items:center;gap:10px;border:1px solid var(--border);background:var(--card);border-radius:999px;padding:6px 15px 6px 7px;max-width:260px}
+.avatar{width:29px;height:29px;border-radius:50%;background:var(--grad);display:flex;align-items:center;justify-content:center;font-family:var(--fd);font-weight:700;font-size:13px;color:#fff;flex-shrink:0}
+.user-chip span{font-size:13px;color:#C6CFDD;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.btn-ghost{display:inline-flex;align-items:center;gap:8px;padding:8px 16px;border-radius:10px;border:1px solid var(--border);background:transparent;color:var(--text);font-weight:600;font-size:13.5px;cursor:pointer;transition:.25s}
+.btn-ghost:hover{border-color:rgba(248,113,113,.55);background:rgba(248,113,113,.08);color:#FCA5A5}
+.btn-ghost svg{width:15px;height:15px;stroke:currentColor}
+
+/* ===== Vault head ===== */
+.vault-head{display:flex;align-items:flex-end;justify-content:space-between;gap:18px;flex-wrap:wrap;padding:46px 0 26px}
+.vault-head h1{font-family:var(--fd);font-size:clamp(26px,3.4vw,36px);letter-spacing:-.8px}
+.vault-head .sub{color:var(--muted);font-size:14.5px;margin-top:6px}
+.vault-head .sub b{color:#C6CFDD;font-weight:600}
+.demo-tag{display:inline-flex;align-items:center;gap:8px;font-family:var(--fm);font-size:11.5px;color:var(--muted);border:1px dashed var(--border);border-radius:999px;padding:7px 14px}
+.demo-tag i{width:6px;height:6px;border-radius:50%;background:var(--cyan);box-shadow:0 0 8px var(--cyan)}
+
+/* ===== Stat cards ===== */
+.stat-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:26px}
+.scard{background:var(--card);border:1px solid var(--border);border-radius:15px;padding:18px 20px;display:flex;align-items:center;gap:14px}
+.scard b{font-family:var(--fd);font-size:26px;letter-spacing:-.5px;display:block;line-height:1.15}
+.scard span{font-size:12.5px;color:var(--muted)}
+.scard .s-ic{width:40px;height:40px;border-radius:11px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.s-ic.blue{background:rgba(79,124,255,.12);border:1px solid rgba(79,124,255,.3)}
+.s-ic.blue svg{stroke:var(--cyan)}
+.s-ic.red{background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.3)}
+.s-ic.red svg{stroke:var(--red)}
+.s-ic.yellow{background:rgba(251,191,36,.1);border:1px solid rgba(251,191,36,.3)}
+.s-ic.yellow svg{stroke:var(--yellow)}
+.s-ic svg{width:19px;height:19px}
+
+/* ===== Toolbar ===== */
+.toolbar{display:flex;align-items:center;gap:12px;margin-bottom:24px;flex-wrap:wrap}
+.search{position:relative;flex:1;min-width:220px}
+.search svg{position:absolute;left:14px;top:50%;transform:translateY(-50%);width:17px;height:17px;stroke:var(--muted);pointer-events:none}
+.search input{width:100%;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px 14px 12px 42px;color:var(--text);font-size:14.5px;outline:none;transition:.25s;font-family:var(--fb)}
+.search input::placeholder{color:rgba(147,160,180,.55)}
+.search input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(79,124,255,.15);background:rgba(79,124,255,.05)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:9px;padding:12px 20px;border-radius:12px;font-weight:700;font-size:14px;cursor:pointer;border:none;transition:.25s}
+.btn svg{width:16px;height:16px}
+.btn-grad{background:var(--grad);color:#fff}
+.btn-grad:hover{transform:translateY(-2px);box-shadow:0 10px 26px rgba(79,124,255,.38)}
+.btn-line{background:transparent;border:1px solid var(--border);color:var(--text)}
+.btn-line:hover{border-color:rgba(79,124,255,.55);background:rgba(79,124,255,.08)}
+
+/* ===== Entries ===== */
+.entries{display:grid;grid-template-columns:1fr 1fr;gap:16px;padding-bottom:60px}
+.entry{background:linear-gradient(160deg,rgba(255,255,255,.05),rgba(255,255,255,.02));border:1px solid var(--border);border-radius:16px;padding:20px;transition:.25s;animation:pop .35s ease both}
+@keyframes pop{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+.entry:hover{border-color:rgba(79,124,255,.4)}
+.e-top{display:flex;align-items:center;gap:13px;margin-bottom:15px}
+.e-ic{width:42px;height:42px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-family:var(--fd);font-weight:700;font-size:17px;color:#fff;flex-shrink:0;background:var(--grad)}
+.e-tit{flex:1;min-width:0}
+.e-tit b{display:block;font-size:15.5px;font-weight:600;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.e-tit span{display:block;font-size:12px;color:var(--muted);font-family:var(--fm);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.badge{font-family:var(--fm);font-size:10.5px;padding:4px 9px;border-radius:999px;flex-shrink:0}
+.badge.red{background:rgba(248,113,113,.12);border:1px solid rgba(248,113,113,.35);color:#FCA5A5}
+.badge.yellow{background:rgba(251,191,36,.1);border:1px solid rgba(251,191,36,.35);color:#FCD34D}
+.badge.green{background:rgba(52,211,153,.1);border:1px solid rgba(52,211,153,.35);color:#6EE7B7}
+.badge.cyan{background:rgba(34,211,238,.1);border:1px solid rgba(34,211,238,.35);color:#67E8F9}
+.e-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-top:1px solid rgba(255,255,255,.05)}
+.e-lbl{font-size:12px;color:var(--muted);width:64px;flex-shrink:0}
+.e-val{flex:1;font-family:var(--fm);font-size:13px;color:#C6CFDD;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.e-val.pass{color:var(--cyan);letter-spacing:1.5px}
+.e-val.pass.revealed{word-break:break-all;white-space:normal;letter-spacing:.4px}
+.ic-btn{width:30px;height:30px;border-radius:8px;border:1px solid var(--border);background:transparent;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:.2s;flex-shrink:0}
+.ic-btn svg{width:14.5px;height:14.5px;stroke:var(--muted);transition:.2s}
+.ic-btn:hover{border-color:rgba(79,124,255,.5);background:rgba(79,124,255,.08)}
+.ic-btn:hover svg{stroke:var(--cyan)}
+.ic-btn.del:hover{border-color:rgba(248,113,113,.5);background:rgba(248,113,113,.08)}
+.ic-btn.del:hover svg{stroke:var(--red)}
+.e-note{margin-top:10px;padding-top:10px;border-top:1px solid rgba(255,255,255,.05);font-size:13px;color:var(--muted)}
+
+/* Empty state */
+.empty{text-align:center;padding:70px 20px;border:1px dashed var(--border);border-radius:20px;background:rgba(255,255,255,.015);grid-column:1/-1}
+.empty svg{width:74px;height:74px;stroke:var(--blue);opacity:.8;margin-bottom:20px}
+.empty h3{font-family:var(--fd);font-size:21px;margin-bottom:9px}
+.empty p{color:var(--muted);font-size:14.5px;max-width:420px;margin:0 auto 24px}
+
+/* ===== Modals ===== */
+.overlay{position:fixed;inset:0;z-index:100;background:rgba(3,6,12,.72);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;padding:22px;opacity:0;pointer-events:none;transition:.25s}
+.overlay.open{opacity:1;pointer-events:auto}
+.modal{width:100%;max-width:470px;background:var(--bg2);border:1px solid rgba(255,255,255,.12);border-radius:20px;padding:28px;box-shadow:0 40px 90px rgba(0,0,0,.55);transform:translateY(16px) scale(.98);transition:.25s;max-height:92vh;overflow-y:auto}
+.overlay.open .modal{transform:none}
+.modal h3{font-family:var(--fd);font-size:20px;letter-spacing:-.3px;margin-bottom:6px}
+.modal .msub{color:var(--muted);font-size:13.5px;margin-bottom:20px}
+.field{margin-bottom:15px}
+.field label{font-size:13px;color:var(--muted);display:block;margin-bottom:7px;font-weight:500}
+.input-wrap{position:relative}
+.input-wrap input,.input-wrap textarea{width:100%;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:11px;padding:11.5px 42px 11.5px 14px;color:var(--text);font-size:14.5px;outline:none;transition:.25s;font-family:var(--fb)}
+.input-wrap textarea{resize:vertical;min-height:64px;padding-right:14px}
+.input-wrap input::placeholder,.input-wrap textarea::placeholder{color:rgba(147,160,180,.5)}
+.input-wrap input:focus,.input-wrap textarea:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(79,124,255,.15);background:rgba(79,124,255,.05)}
+.eye{position:absolute;right:7px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;padding:7px;display:flex}
+.eye svg{width:17px;height:17px;stroke:var(--muted);transition:.2s}
+.eye:hover svg{stroke:var(--text)}
+.gen-mini{position:absolute;right:41px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;padding:7px;display:flex}
+.gen-mini svg{width:17px;height:17px;stroke:var(--cyan)}
+.gen-mini:hover svg{filter:brightness(1.3)}
+.m-error{display:none;background:rgba(248,113,113,.09);border:1px solid rgba(248,113,113,.35);color:#FCA5A5;font-size:13px;border-radius:10px;padding:9px 13px;margin-bottom:14px}
+.m-error.show{display:block}
+.m-actions{display:flex;gap:11px;margin-top:22px}
+.m-actions .btn{flex:1;padding:12.5px}
+.btn-danger{background:linear-gradient(120deg,#EF4444,#F87171);color:#fff}
+.btn-danger:hover{transform:translateY(-2px);box-shadow:0 10px 26px rgba(239,68,68,.35)}
+
+/* Generator */
+.gen-out{display:flex;gap:9px;margin-bottom:16px}
+.gen-out code{flex:1;font-family:var(--fm);font-size:14.5px;color:var(--cyan);background:rgba(34,211,238,.06);border:1px solid rgba(34,211,238,.3);border-radius:11px;padding:12px 14px;word-break:break-all;line-height:1.5;min-height:49px}
+.gen-row{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px;font-size:14px}
+.gen-row output{font-family:var(--fm);font-size:13.5px;color:#C6CFDD;background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:8px;padding:4px 11px;min-width:44px;text-align:center}
+input[type=range]{flex:1;accent-color:#4F7CFF;height:4px;cursor:pointer}
+.gen-checks{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:6px}
+.gchk{display:flex;align-items:center;gap:9px;font-size:13.5px;color:#C6CFDD;cursor:pointer;user-select:none;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:10px;padding:9px 12px;transition:.2s}
+.gchk:hover{border-color:rgba(79,124,255,.4)}
+.gchk input{display:none}
+.gchk .box{width:17px;height:17px;border-radius:5px;border:1.5px solid var(--border);display:flex;align-items:center;justify-content:center;transition:.2s;flex-shrink:0}
+.gchk .box svg{width:10px;height:10px;stroke:#fff;stroke-width:3.2;opacity:0;transition:.2s}
+.gchk input:checked + .box{background:var(--grad);border-color:transparent}
+.gchk input:checked + .box svg{opacity:1}
+
+/* ===== 2FA (панель + настройки) ===== */
+[hidden]{display:none!important}
+.sec-strip{display:flex;align-items:center;gap:14px;background:var(--card);border:1px solid var(--border);border-radius:14px;padding:13px 18px;margin-bottom:22px;flex-wrap:wrap}
+.s-ic2{width:38px;height:38px;border-radius:11px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.s-ic2 svg{width:19px;height:19px}
+.s-ic2.on{background:rgba(52,211,153,.12)} .s-ic2.on svg{stroke:var(--green)}
+.s-ic2.off{background:rgba(251,191,36,.1)} .s-ic2.off svg{stroke:var(--yellow)}
+.sec-txt{flex:1;min-width:220px}
+.sec-txt b{font-size:14.5px;display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+.sec-txt>span{font-size:13px;color:var(--muted)}
+.sec-badge{font-size:11px;font-weight:700;letter-spacing:.4px;padding:2px 9px;border-radius:20px}
+.sec-badge.on{background:rgba(52,211,153,.14);color:var(--green);border:1px solid rgba(52,211,153,.35)}
+.sec-badge.off{background:rgba(251,191,36,.1);color:var(--yellow);border:1px solid rgba(251,191,36,.3)}
+.mfa-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.mfa-card{border:1px solid var(--border);background:rgba(255,255,255,.03);border-radius:12px;cursor:pointer;transition:.2s}
+.mfa-card:hover{border-color:rgba(79,124,255,.5)}
+.mfa-card.sel{border-color:var(--blue);background:rgba(79,124,255,.08);box-shadow:0 0 0 1px rgba(79,124,255,.4)}
+.mfa-card input{display:none}
+.mfa-card .mc-in{display:block;padding:10px 12px}
+.mfa-card b{display:block;font-size:13.5px;margin-bottom:2px}
+.mfa-card .mc-in>span:last-child{font-size:11.5px;color:var(--muted);line-height:1.35;display:block}
+.code-input{font-family:var(--fm);font-size:19px!important;letter-spacing:7px;text-align:center;font-weight:600}
+.qr-box{display:flex;justify-content:center;margin:4px 0 16px}
+.qr-box svg{width:172px;height:172px;background:#fff;border-radius:12px;padding:10px;box-shadow:0 12px 34px rgba(0,0,0,.4)}
+.secret-row{display:flex;gap:9px;align-items:stretch}
+.secret-row code{flex:1;font-family:var(--fm);font-size:13px;color:var(--cyan);background:rgba(34,211,238,.06);border:1px solid rgba(34,211,238,.3);border-radius:11px;padding:10px 12px;word-break:break-all;line-height:1.5}
+.secret-row button{border:1px solid var(--border);background:rgba(255,255,255,.04);color:var(--text);border-radius:11px;padding:0 14px;font-size:12.5px;cursor:pointer;font-family:var(--fb);transition:.2s;flex-shrink:0}
+.secret-row button:hover{border-color:var(--blue)}
+.demo-code-note{margin-top:16px;font-size:12px;color:var(--muted);text-align:left;background:rgba(34,211,238,.05);border:1px dashed rgba(34,211,238,.35);border-radius:10px;padding:10px 13px;line-height:1.7}
+.demo-code-note b{color:var(--cyan)}
+.demo-code-note code{font-family:var(--fm);color:#7DD3FC;font-size:14.5px;letter-spacing:2px;background:rgba(34,211,238,.09);padding:2px 9px;border-radius:6px}
+
+/* ===== Toast ===== */
+.toast{position:fixed;left:50%;bottom:30px;transform:translate(-50%,80px);background:#0E1930;border:1px solid rgba(79,124,255,.45);color:var(--text);font-size:14px;font-weight:500;padding:13px 22px;border-radius:12px;box-shadow:0 18px 50px rgba(0,0,0,.5);z-index:200;opacity:0;transition:.3s;display:flex;align-items:center;gap:10px;max-width:90vw}
+.toast.show{transform:translate(-50%,0);opacity:1}
+.toast svg{width:17px;height:17px;stroke:var(--green);flex-shrink:0}
+
+@media(max-width:820px){
+  .entries{grid-template-columns:1fr}
+  .stat-cards{grid-template-columns:1fr}
+  .user-chip span{display:none}
+  .user-chip{padding:6px}
+}
+</style>
+</head>
+<body>
+
+<header class="site-head">
+  <div class="wrap head-in">
+    <a class="logo" href="index.html">
+      <svg viewBox="0 0 24 24" fill="none"><path d="M12 2l8 3v6c0 5-3.4 9.4-8 11-4.6-1.6-8-6-8-11V5l8-3z" fill="url(#lgv)"/><path d="M12 8.5a2 2 0 0 0-2 2c0 .9.6 1.6 1.4 1.9L11 16h2l-.4-3.6c.8-.3 1.4-1 1.4-1.9a2 2 0 0 0-2-2z" fill="#fff"/><defs><linearGradient id="lgv" x1="4" y1="2" x2="20" y2="22"><stop stop-color="#4F7CFF"/><stop offset="1" stop-color="#22D3EE"/></linearGradient></defs></svg>
+      Lock<span class="grad-text">Box</span>
+    </a>
+    <div class="head-right">
+      <div class="user-chip" title="Вы вошли как">
+        <span class="avatar" id="avatar">?</span>
+        <span id="userEmail">…</span>
+      </div>
+      <button class="btn-ghost" id="logoutBtn">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h3"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg>
+        Выйти
+      </button>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="vault-head">
+    <div>
+      <h1>Моё хранилище</h1>
+      <p class="sub">Вы вошли как <b id="subEmail">…</b> · расшифровано на этом устройстве</p>
+    </div>
+    <span class="demo-tag"><i></i>ДЕМО · данные хранятся в localStorage этого браузера</span>
+  </div>
+
+  <div class="stat-cards">
+    <div class="scard">
+      <div class="s-ic blue"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="10" width="16" height="11" rx="3"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg></div>
+      <div><b id="stTotal">0</b><span id="stTotalLbl">записей в хранилище</span></div>
+    </div>
+    <div class="scard">
+      <div class="s-ic yellow"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4M12 17h.01"/><path d="M10.3 3.9L1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg></div>
+      <div><b id="stWeak" style="color:var(--yellow)">0</b><span id="stWeakLbl">слабых паролей</span></div>
+    </div>
+    <div class="scard">
+      <div class="s-ic red"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M7 11l9-9 5 5-9 9"/><path d="M17 11l-9 9-5-5 9-9"/><path d="M12 12l-1.5 1.5"/></svg></div>
+      <div><b id="stReuse" style="color:var(--red)">0</b><span id="stReuseLbl">повторяющихся паролей</span></div>
+    </div>
+  </div>
+
+  <div class="sec-strip">
+    <span class="s-ic2 off" id="secIcon"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l8 3v6c0 5-3.4 9.4-8 11-4.6-1.6-8-6-8-11V5l8-3z"/><path d="M9 12l2 2 4-4"/></svg></span>
+    <div class="sec-txt">
+      <b>Двухэтапная аутентификация <span class="sec-badge off" id="mfaBadge">Выключена</span></b>
+      <span id="mfaState">Выключена — вход только по мастер-паролю</span>
+    </div>
+    <button class="btn btn-line" id="mfaSetup">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33h0a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51h0a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82v0a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      Настроить
+    </button>
+  </div>
+
+  <div class="toolbar">
+    <div class="search">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+      <input type="text" id="searchInp" placeholder="Поиск по названию, сайту или логину…">
+    </div>
+    <button class="btn btn-line" id="openGen">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4L19 9a2.4 2.4 0 0 0-3.4-3.4L5 16.6V20z"/><path d="M13.5 6.5l3.4 3.4"/></svg>
+      Генератор
+    </button>
+    <button class="btn btn-grad" id="addBtn">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+      Добавить запись
+    </button>
+  </div>
+
+  <div class="entries" id="entriesGrid"></div>
+
+  <div class="empty" id="emptyState" hidden>
+    <svg viewBox="0 0 24 24" fill="none" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="10" width="16" height="11" rx="3"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/><circle cx="12" cy="15.5" r="1.4"/></svg>
+    <h3>Хранилище пока пусто</h3>
+    <p>Добавьте первую запись вручную или сгенерируйте надёжный пароль — всё сохранится прямо в этом браузере.</p>
+    <button class="btn btn-grad" id="emptyAdd">Добавить первую запись</button>
+  </div>
+</main>
+
+<!-- ===== Modal: add / edit entry ===== -->
+<div class="overlay" id="entryOverlay">
+  <div class="modal" role="dialog" aria-modal="true">
+    <h3 id="mTitle">Новая запись</h3>
+    <p class="msub">Данные сохранятся локально в вашем браузере.</p>
+    <div class="m-error" id="mError"></div>
+    <div class="field">
+      <label for="fTitle">Название *</label>
+      <div class="input-wrap"><input type="text" id="fTitle" placeholder="Например: Google" maxlength="60"></div>
+    </div>
+    <div class="field">
+      <label for="fUrl">Сайт / адрес</label>
+      <div class="input-wrap"><input type="text" id="fUrl" placeholder="https://google.com" maxlength="120"></div>
+    </div>
+    <div class="field">
+      <label for="fLogin">Логин / email</label>
+      <div class="input-wrap"><input type="text" id="fLogin" placeholder="you@example.com" maxlength="80"></div>
+    </div>
+    <div class="field">
+      <label for="fPass">Пароль *</label>
+      <div class="input-wrap">
+        <input type="password" id="fPass" placeholder="Пароль или сгенерируйте" maxlength="100" style="padding-right:76px">
+        <button type="button" class="gen-mini" id="mGenBtn" title="Сгенерировать пароль"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4L19 9a2.4 2.4 0 0 0-3.4-3.4L5 16.6V20z"/><path d="M13.5 6.5l3.4 3.4"/></svg></button>
+        <button type="button" class="eye" id="fPassEye" title="Показать/скрыть"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg></button>
+      </div>
+    </div>
+    <div class="field">
+      <label for="fNote">Заметка</label>
+      <div class="input-wrap"><textarea id="fNote" placeholder="Необязательно" maxlength="200"></textarea></div>
+    </div>
+    <div class="m-actions">
+      <button class="btn btn-line" id="mCancel">Отмена</button>
+      <button class="btn btn-grad" id="mSave">Сохранить</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== Modal: password generator ===== -->
+<div class="overlay" id="genOverlay">
+  <div class="modal" role="dialog" aria-modal="true">
+    <h3>Генератор паролей</h3>
+    <p class="msub">Пароль создаётся локально через crypto.getRandomValues — никуда не отправляется.</p>
+    <div class="gen-out">
+      <code id="genOut">…</code>
+      <button class="ic-btn" id="genCopy" title="Скопировать" style="width:49px;height:49px;border-radius:11px"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2.5"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg></button>
+      <button class="ic-btn" id="genRegen" title="Сгенерировать заново" style="width:49px;height:49px;border-radius:11px"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.6-6.4"/><path d="M21 3v6h-6"/></svg></button>
+    </div>
+    <div class="gen-row">
+      <span style="color:var(--muted);font-size:13.5px">Длина</span>
+      <input type="range" id="genLen" min="8" max="40" value="16">
+      <output id="genLenOut">16</output>
+    </div>
+    <div class="gen-checks">
+      <label class="gchk"><input type="checkbox" id="gcUp" checked><span class="box"><svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></span>A–Z</label>
+      <label class="gchk"><input type="checkbox" id="gcLow" checked><span class="box"><svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></span>a–z</label>
+      <label class="gchk"><input type="checkbox" id="gcNum" checked><span class="box"><svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></span>0–9</label>
+      <label class="gchk"><input type="checkbox" id="gcSym" checked><span class="box"><svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></span>!@#$%</label>
+    </div>
+    <div class="m-actions">
+      <button class="btn btn-line" id="genClose">Закрыть</button>
+      <button class="btn btn-grad" id="genUse">Использовать</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== Modal: delete confirm ===== -->
+<div class="overlay" id="delOverlay">
+  <div class="modal" role="dialog" aria-modal="true">
+    <h3>Удалить запись?</h3>
+    <p class="msub" id="delText">…</p>
+    <div class="m-actions">
+      <button class="btn btn-line" id="delCancel">Отмена</button>
+      <button class="btn btn-danger" id="delYes">Удалить</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== Modal: настройки 2FA ===== -->
+<div class="overlay" id="secOverlay">
+  <div class="modal" role="dialog" aria-modal="true">
+    <h3>Двухэтапная аутентификация</h3>
+    <p class="msub">Второй шаг защиты при входе: код на почту, SMS или приложение-аутентификатор.</p>
+    <div class="m-error" id="secError"></div>
+    <div class="mfa-grid" id="secMfaGrid">
+      <label class="mfa-card"><input type="radio" name="secMfa" value="none"><span class="mc-in"><b>Без 2FA</b><span>Только мастер-пароль</span></span></label>
+      <label class="mfa-card"><input type="radio" name="secMfa" value="email"><span class="mc-in"><b>Почта</b><span>Код на ваш email</span></span></label>
+      <label class="mfa-card"><input type="radio" name="secMfa" value="phone"><span class="mc-in"><b>SMS</b><span>Код на телефон</span></span></label>
+      <label class="mfa-card"><input type="radio" name="secMfa" value="app"><span class="mc-in"><b>Приложение</b><span>Google Authenticator</span></span></label>
+    </div>
+    <div class="field" id="secPhoneField" hidden style="margin-top:14px">
+      <label for="secPhone">Номер телефона</label>
+      <div class="input-wrap"><input type="tel" id="secPhone" placeholder="+7 999 123-45-67" maxlength="20" autocomplete="tel"></div>
+    </div>
+    <div id="secTotpArea" hidden style="margin-top:14px">
+      <p class="msub" style="margin-bottom:12px">Отсканируйте QR в Google Authenticator («+» → «Сканировать QR-код») и подтвердите кодом из приложения.</p>
+      <div class="qr-box" id="secQr"></div>
+      <div class="field">
+        <label>Ключ для ручного ввода</label>
+        <div class="secret-row"><code id="secSecret">…</code><button type="button" id="secSecretCopy">Копировать</button></div>
+      </div>
+      <div class="field">
+        <label for="secCode">Код из приложения</label>
+        <div class="input-wrap"><input type="text" id="secCode" class="code-input" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="&bull;&bull;&bull;&bull;&bull;&bull;"></div>
+      </div>
+      <div class="demo-code-note"><b>Демо:</b> текущий код — <code id="secDemoCode">&bull;&bull;&bull;&bull;&bull;&bull;</code><span id="secDemoTimer"></span></div>
+    </div>
+    <div class="m-actions">
+      <button class="btn btn-line" id="secCancel">Отмена</button>
+      <button class="btn btn-grad" id="secSave">Сохранить</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"><svg viewBox="0 0 24 24" fill="none" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg><span id="toastTxt">Готово</span></div>
+
+
+<script src="assets/auth-core.js"></script>
+<script src="assets/qr.min.js"></script>
+<script>
+// ===== Сессия: если не вошли — на страницу входа =====
+const LS_SESSION = 'lockbox_session';
+let SESSION = null;
+try { SESSION = JSON.parse(sessionStorage.getItem(LS_SESSION) || localStorage.getItem(LS_SESSION) || 'null'); } catch(e){}
+if (!(SESSION && SESSION.email)) {
+  location.replace('join.html');
+} else {
+  initVault();
+}
+
+function initVault(){
+  const email = SESSION.email;
+  const LS_VAULT = 'lockbox_vault_' + email;
+
+  // --- шапка ---
+  document.getElementById('userEmail').textContent = email;
+  document.getElementById('subEmail').textContent = email;
+  document.getElementById('avatar').textContent = email[0].toUpperCase();
+
+  const $ = id => document.getElementById(id);
+
+  // ===== Хранилище записей =====
+  const load = () => { try { return JSON.parse(localStorage.getItem(LS_VAULT)) || []; } catch(e){ return []; } };
+  const save = list => localStorage.setItem(LS_VAULT, JSON.stringify(list));
+
+  // ===== Утилиты =====
+  function toast(msg){
+    $('toastTxt').textContent = msg;
+    const t = $('toast');
+    t.classList.remove('show'); void t.offsetWidth; t.classList.add('show');
+    clearTimeout(toast._t); toast._t = setTimeout(() => t.classList.remove('show'), 2200);
+  }
+  function copyText(txt, okMsg){
+    const done = () => toast(okMsg || 'Скопировано в буфер');
+    if (navigator.clipboard && window.isSecureContext) {
+      navigator.clipboard.writeText(txt).then(done).catch(() => fallbackCopy(txt, done));
+    } else fallbackCopy(txt, done);
+  }
+  function fallbackCopy(txt, done){
+    const ta = document.createElement('textarea');
+    ta.value = txt; ta.style.cssText = 'position:fixed;opacity:0';
+    document.body.appendChild(ta); ta.select();
+    try { document.execCommand('copy'); done(); } catch(e) { toast('Не удалось скопировать'); }
+    ta.remove();
+  }
+  function passMeta(pass){
+    let pool = 0;
+    if (/[a-z]/.test(pass)) pool += 26;
+    if (/[A-Z]/.test(pass)) pool += 26;
+    if (/[0-9]/.test(pass)) pool += 10;
+    if (/[^a-zA-Z0-9]/.test(pass)) pool += 30;
+    const ent = pass.length * Math.log2(pool || 2);
+    if (ent < 45)  return { ent, cls: 'red',    txt: 'слабый' };
+    if (ent < 70)  return { ent, cls: 'yellow', txt: 'средний' };
+    if (ent < 100) return { ent, cls: 'green',  txt: 'надёжный' };
+    return              { ent, cls: 'cyan',    txt: 'максимальный' };
+  }
+  // Русская плюрализация: 1 запись / 2 записи / 5 записей
+  function plural(n, one, few, many){
+    const m10 = n % 10, m100 = n % 100;
+    if (m10 === 1 && m100 !== 11) return one;
+    if (m10 >= 2 && m10 <= 4 && (m100 < 12 || m100 > 14)) return few;
+    return many;
+  }
+  const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+  // ===== Рендер списка + статистика =====
+  const seen = {};
+  let list = load();
+  list.forEach(e => { seen[e.pass] = (seen[e.pass] || 0) + 1; });
+
+  function render(){
+    list = load();
+    const q = $('searchInp').value.trim().toLowerCase();
+    const filtered = list.filter(e =>
+      !q || (e.title + ' ' + (e.url||'') + ' ' + (e.login||'')).toLowerCase().includes(q)
+    );
+
+    const grid = $('entriesGrid');
+    grid.innerHTML = '';
+    const reuseCounts = {};
+    list.forEach(e => reuseCounts[e.pass] = (reuseCounts[e.pass]||0)+1);
+
+    let weak = 0, reused = 0;
+    list.forEach(e => {
+      const m = passMeta(e.pass);
+      if (m.cls === 'red' || m.cls === 'yellow') weak++;
+      if (reuseCounts[e.pass] > 1) reused++;
+    });
+    $('stTotal').textContent = list.length;
+    $('stWeak').textContent  = weak;
+    $('stReuse').textContent = reused;
+    $('stTotalLbl').textContent = plural(list.length, 'запись', 'записи', 'записей') + ' в хранилище';
+    $('stWeakLbl').textContent  = plural(weak, 'слабый пароль', 'слабых пароля', 'слабых паролей');
+    $('stReuseLbl').textContent = plural(reused, 'повторяющийся пароль', 'повторяющихся пароля', 'повторяющихся паролей');
+
+    const isEmpty = list.length === 0;
+    $('emptyState').hidden = !isEmpty;
+    if (isEmpty) return;
+
+    if (filtered.length === 0) {
+      grid.innerHTML = '<div class="empty" style="padding:44px 20px"><h3>Ничего не найдено</h3><p>Попробуйте изменить поисковый запрос.</p></div>';
+      return;
+    }
+
+    filtered.forEach((e, i) => {
+      const m = passMeta(e.pass);
+      const badges = [];
+      if (reuseCounts[e.pass] > 1) badges.push('<span class="badge red">повторяется</span>');
+      badges.push('<span class="badge ' + m.cls + '">' + m.txt + '</span>');
+      const dots = '•'.repeat(Math.min(Math.max(e.pass.length, 6), 14));
+      const card = document.createElement('article');
+      card.className = 'entry';
+      card.style.animationDelay = (i * 0.04) + 's';
+      card.innerHTML =
+        '<div class="e-top">' +
+          '<div class="e-ic">' + esc(e.title[0].toUpperCase()) + '</div>' +
+          '<div class="e-tit"><b>' + esc(e.title) + '</b><span>' + esc(e.url || e.login || 'без адреса') + '</span></div>' +
+          badges.join('') +
+        '</div>' +
+        '<div class="e-row"><span class="e-lbl">Логин</span><code class="e-val">' + esc(e.login || '—') + '</code>' +
+          '<button class="ic-btn" data-copy="' + esc(e.login || '') + '" title="Скопировать логин"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2.5"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg></button></div>' +
+        '<div class="e-row"><span class="e-lbl">Пароль</span><code class="e-val pass" data-idx="' + list.indexOf(e) + '">' + dots + '</code>' +
+          '<button class="ic-btn e-eye" data-idx="' + list.indexOf(e) + '" title="Показать/скрыть"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg></button>' +
+          '<button class="ic-btn" data-copy="' + esc(e.pass) + '" title="Скопировать пароль"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2.5"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg></button></div>' +
+        (e.note ? '<div class="e-note">' + esc(e.note) + '</div>' : '') +
+        '<div class="e-row" style="border-top:1px solid rgba(255,255,255,.05);margin-top:6px;padding-top:12px"><span class="e-lbl" style="width:auto">Действия:</span>' +
+          '<button class="btn btn-line" data-edit="' + list.indexOf(e) + '" style="padding:7px 14px;font-size:12.5px;border-radius:9px">Изменить</button>' +
+          '<button class="btn btn-line" data-del="' + list.indexOf(e) + '" style="padding:7px 14px;font-size:12.5px;border-radius:9px;color:#FCA5A5;border-color:rgba(248,113,113,.3)">Удалить</button></div>';
+      grid.appendChild(card);
+    });
+  }
+
+  // Копирование / глаз / кнопки карточек (делегирование)
+  $('entriesGrid').addEventListener('click', ev => {
+    const cp = ev.target.closest('[data-copy]');
+    if (cp && cp.dataset.copy) { copyText(cp.dataset.copy); return; }
+    const eye = ev.target.closest('.e-eye');
+    if (eye) {
+      const code = $('entriesGrid').querySelector('code[data-idx="' + eye.dataset.idx + '"]');
+      const entry = list[+eye.dataset.idx];
+      if (code && entry) {
+        const rev = code.classList.toggle('revealed');
+        code.textContent = rev ? entry.pass : '•'.repeat(Math.min(Math.max(entry.pass.length, 6), 14));
+      }
+      return;
+    }
+    const ed = ev.target.closest('[data-edit]');
+    if (ed) { openEntry(+ed.dataset.edit); return; }
+    const dl = ev.target.closest('[data-del]');
+    if (dl) { openDelete(+dl.dataset.del); return; }
+  });
+
+  // Поиск
+  $('searchInp').addEventListener('input', render);
+
+  // ===== Модалка добавления / редактирования =====
+  let editIdx = -1;
+  function openEntry(idx){
+    editIdx = (typeof idx === 'number') ? idx : -1;
+    const e = editIdx >= 0 ? list[editIdx] : null;
+    $('mTitle').textContent = e ? 'Изменить запись' : 'Новая запись';
+    $('fTitle').value = e ? e.title : '';
+    $('fUrl').value   = e ? (e.url || '') : '';
+    $('fLogin').value = e ? (e.login || '') : '';
+    $('fPass').value  = e ? e.pass : '';
+    $('fPass').type   = 'password';
+    $('fNote').value  = e ? (e.note || '') : '';
+    $('mError').classList.remove('show');
+    openModal('entryOverlay');
+    setTimeout(() => $('fTitle').focus(), 60);
+  }
+  $('addBtn').addEventListener('click', () => openEntry());
+  $('emptyAdd').addEventListener('click', () => openEntry());
+  $('mCancel').addEventListener('click', () => closeModal('entryOverlay'));
+  $('mSave').addEventListener('click', () => {
+    const title = $('fTitle').value.trim();
+    const url   = $('fUrl').value.trim();
+    const login = $('fLogin').value.trim();
+    const pass  = $('fPass').value;
+    const note  = $('fNote').value.trim();
+    const err = $('mError');
+    if (!title) { err.textContent = 'Укажите название записи.'; err.classList.add('show'); return; }
+    if (!pass)  { err.textContent = 'Пароль не может быть пустым. Введите или сгенерируйте.'; err.classList.add('show'); return; }
+    const cur = load();
+    if (editIdx >= 0 && list[editIdx]) {
+      const realIdx = list[editIdx].id != null ? cur.findIndex(x => x.id === list[editIdx].id) : editIdx;
+      cur[realIdx >= 0 ? realIdx : editIdx] = { ...list[editIdx], title, url, login, pass, note, updated: Date.now() };
+    } else {
+      cur.push({ id: Date.now() + Math.random().toString(16).slice(2, 8), title, url, login, pass, note, created: Date.now() });
+    }
+    save(cur);
+    closeModal('entryOverlay');
+    render();
+    toast(editIdx >= 0 ? 'Запись обновлена' : 'Запись добавлена в хранилище');
+  });
+  $('fPassEye').addEventListener('click', () => {
+    const p = $('fPass'); p.type = p.type === 'password' ? 'text' : 'password';
+  });
+
+  // ===== Удаление =====
+  let delIdx = -1;
+  function openDelete(idx){
+    delIdx = idx;
+    const e = list[idx];
+    if (!e) return;
+    $('delText').textContent = '«' + e.title + '» будет удалена безвозвратно. Продолжить?';
+    openModal('delOverlay');
+  }
+  $('delCancel').addEventListener('click', () => closeModal('delOverlay'));
+  $('delYes').addEventListener('click', () => {
+    const cur = load();
+    const victim = list[delIdx];
+    const realIdx = victim && victim.id != null ? cur.findIndex(x => x.id === victim.id) : delIdx;
+    if (realIdx >= 0) cur.splice(realIdx, 1);
+    save(cur);
+    closeModal('delOverlay');
+    render();
+    toast('Запись удалена');
+  });
+
+  // ===== Генератор паролей =====
+  const SETS = { up: 'ABCDEFGHJKLMNPQRSTUVWXYZ', low: 'abcdefghijkmnpqrstuvwxyz', num: '23456789', sym: '!@#$%^&*()-_=+?' };
+  let genFromEntry = false;
+  function generate(){
+    let pool = '';
+    if ($('gcUp').checked)  pool += SETS.up;
+    if ($('gcLow').checked) pool += SETS.low;
+    if ($('gcNum').checked) pool += SETS.num;
+    if ($('gcSym').checked) pool += SETS.sym;
+    if (!pool) { toast('Выберите хотя бы один набор символов'); return null; }
+    const len = +$('genLen').value;
+    const bytes = new Uint32Array(len);
+    crypto.getRandomValues(bytes);
+    return [...bytes].map(b => pool[b % pool.length]).join('');
+  }
+  function refreshGen(){ const p = generate(); if (p) $('genOut').textContent = p; }
+  function openGen(fromEntry){
+    genFromEntry = !!fromEntry;
+    $('genUse').style.display = genFromEntry ? '' : 'none';
+    openModal('genOverlay');
+    refreshGen();
+  }
+  $('openGen').addEventListener('click', () => openGen(false));
+  $('mGenBtn').addEventListener('click', () => openGen(true));
+  $('genRegen').addEventListener('click', refreshGen);
+  $('genLen').addEventListener('input', () => { $('genLenOut').textContent = $('genLen').value; refreshGen(); });
+  ['gcUp','gcLow','gcNum','gcSym'].forEach(id => $(id).addEventListener('change', refreshGen));
+  $('genClose').addEventListener('click', () => closeModal('genOverlay'));
+  $('genCopy').addEventListener('click', () => copyText($('genOut').textContent, 'Пароль скопирован'));
+  $('genUse').addEventListener('click', () => {
+    $('fPass').value = $('genOut').textContent;
+    closeModal('genOverlay');
+    toast('Пароль подставлен в форму');
+  });
+
+  // ============================================================
+  // ===== Настройки 2FA =====
+  // ============================================================
+  function curTwofa(){ const u = LockAuth.getUsers()[email]; return (u && u.twofa) || { method: 'none' }; }
+  function applyTwofa(t){
+    const users = LockAuth.getUsers();
+    if (users[email]) { if (t) users[email].twofa = t; else delete users[email].twofa; LockAuth.saveUsers(users); }
+    updateSecStrip();
+  }
+  function updateSecStrip(){
+    const t = curTwofa();
+    const m = t.method || 'none';
+    $('secIcon').className = 's-ic2 ' + (m === 'none' ? 'off' : 'on');
+    const badge = $('mfaBadge');
+    badge.textContent = m === 'none' ? 'Выключена' : 'Включена';
+    badge.className = 'sec-badge ' + (m === 'none' ? 'off' : 'on');
+    let txt = 'Выключена — вход только по мастер-паролю';
+    if (m === 'email') txt = 'Включена · одноразовый код на почту ' + LockAuth.maskEmail(email);
+    if (m === 'phone') txt = 'Включена · одноразовый код по SMS на ' + LockAuth.maskPhone(t.phone || '');
+    if (m === 'app')   txt = 'Включена · приложение-аутентификатор (TOTP)';
+    $('mfaState').textContent = txt;
+  }
+  let secDraft = null;
+  function openSec(){
+    const t = curTwofa();
+    secDraft = { prev: t.method || 'none', method: t.method || 'none', phone: t.phone || '', secret: t.secret || '' };
+    document.querySelectorAll('input[name="secMfa"]').forEach(r => {
+      r.checked = r.value === secDraft.method;
+      r.closest('.mfa-card').classList.toggle('sel', r.checked);
+    });
+    $('secPhone').value = secDraft.phone;
+    $('secCode').value = '';
+    $('secError').classList.remove('show');
+    syncSecUi();
+    openModal('secOverlay');
+  }
+  function syncSecUi(){
+    const m = secDraft.method;
+    $('secPhoneField').hidden = m !== 'phone';
+    const isApp = m === 'app';
+    if (isApp) {
+      if (!secDraft.secret) secDraft.secret = LockAuth.genSecret();
+      LockAuth.renderQr($('secQr'), secDraft.secret, email);
+      $('secSecret').textContent = secDraft.secret;
+      const code = LockAuth.totpAt(secDraft.secret, LockAuth.currentCounter());
+      $('secDemoCode').textContent = code.slice(0, 3) + ' ' + code.slice(3);
+      $('secDemoTimer').textContent = ' · обновится через ' + LockAuth.secondsRemaining() + ' с';
+    }
+    $('secTotpArea').hidden = !isApp;
+  }
+  document.querySelectorAll('input[name="secMfa"]').forEach(r => {
+    r.addEventListener('change', () => {
+      if (!secDraft) return;
+      secDraft.method = r.value;
+      if (r.value === 'app' && (secDraft.prev !== 'app' || !secDraft.secret)) secDraft.secret = ''; // новый секрет при смене метода
+      document.querySelectorAll('#secMfaGrid .mfa-card').forEach(c => c.classList.remove('sel'));
+      r.closest('.mfa-card').classList.add('sel');
+      syncSecUi();
+    });
+  });
+  $('secSecretCopy').addEventListener('click', () => copyText(secDraft.secret, 'Ключ скопирован'));
+  $('secCancel').addEventListener('click', () => closeModal('secOverlay'));
+  $('secSave').addEventListener('click', () => {
+    const m = secDraft.method;
+    const err = $('secError');
+    err.classList.remove('show');
+    if (m === 'phone') {
+      const ph = $('secPhone').value.trim();
+      if (ph.replace(/\D/g, '').length < 10) { err.textContent = 'Введите корректный номер телефона — на него будут приходить коды.'; err.classList.add('show'); return; }
+      applyTwofa({ method: 'phone', phone: ph });
+    } else if (m === 'app') {
+      const cur = curTwofa();
+      const same = cur.method === 'app' && cur.secret === secDraft.secret;
+      if (!same && !LockAuth.verifyTotp(secDraft.secret, $('secCode').value)) {
+        err.textContent = 'Неверный код. Добавьте аккаунт в приложение по QR (или ключу) и введите свежий код.';
+        err.classList.add('show');
+        return;
+      }
+      applyTwofa({ method: 'app', secret: secDraft.secret });
+    } else if (m === 'email') {
+      applyTwofa({ method: 'email' });
+    } else {
+      applyTwofa(null);
+    }
+    closeModal('secOverlay');
+    toast('Настройки двухэтапной аутентификации сохранены');
+  });
+  $('mfaSetup').addEventListener('click', openSec);
+  // Живой тикер демо-кода в открытой модалке (метод «Приложение»)
+  setInterval(() => {
+    if (!$('secOverlay').classList.contains('open') || !secDraft || secDraft.method !== 'app') return;
+    const code = LockAuth.totpAt(secDraft.secret, LockAuth.currentCounter());
+    $('secDemoCode').textContent = code.slice(0, 3) + ' ' + code.slice(3);
+    $('secDemoTimer').textContent = ' · обновится через ' + LockAuth.secondsRemaining() + ' с';
+  }, 1000);
+  updateSecStrip();
+
+  // ===== Открытие / закрытие модалок =====
+  function openModal(id){ $(id).classList.add('open'); }
+  function closeModal(id){ $(id).classList.remove('open'); }
+  document.querySelectorAll('.overlay').forEach(ov => {
+    ov.addEventListener('click', e => { if (e.target === ov) ov.classList.remove('open'); });
+  });
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') document.querySelectorAll('.overlay.open').forEach(ov => ov.classList.remove('open'));
+  });
+
+  // ===== Выход =====
+  $('logoutBtn').addEventListener('click', () => {
+    try { sessionStorage.removeItem(LS_SESSION); localStorage.removeItem(LS_SESSION); } catch(e){}
+    location.replace('join.html');
+  });
+
+  // Старт
+  render();
+}
+</script>
+
+
+</body>
+</html>

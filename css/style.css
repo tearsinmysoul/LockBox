@@ -1,0 +1,13 @@
+/* Главный файл стилей */
+
+/* 1. Шрифты */
+@import 'base/fonts.css';
+
+/* 2. Базовые настройки (Reset, Body) */
+@import 'base/base.css';
+
+/* 3. Макет (Header, Footer, Grid/Flex containers) */
+@import 'layout/layout.css';
+
+/* 4. Компоненты (Buttons, Cards, Forms) */
+@import 'components/components.css';

@@ -1,0 +1,13 @@
+/* Подключение шрифтов */
+@font-face {
+    font-family: 'MyCustomFont';
+    src: url('../../assets/fonts/MyFont.woff2') format('woff2'), /* Рекомендуемый формат */
+         url('../../assets/fonts/MyFont.woff') format('woff');
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap; /* Улучшает загрузку */
+}
+
+body {
+    font-family: 'MyCustomFont', Arial, sans-serif;
+}

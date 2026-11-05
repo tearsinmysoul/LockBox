@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LockBox — Один ключ. Тысячи замков.</title>
+<meta name="description" content="LockBox — менеджер паролей с Zero-Knowledge шифрованием AES-256. Мастер-пароль не покидает ваше устройство.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%234F7CFF' d='M12 2a5 5 0 0 0-5 5v3H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8a2 2 0 0 0-2-2h-1V7a5 5 0 0 0-5-5Zm-3 8V7a3 3 0 1 1 6 0v3H9Z'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#070B14; --bg2:#0B1220; --card:rgba(255,255,255,.04); --border:rgba(255,255,255,.09);
+  --text:#E9EEF7; --muted:#93A0B4; --blue:#4F7CFF; --cyan:#22D3EE; --green:#34D399; --red:#F87171;
+  --grad:linear-gradient(120deg,#4F7CFF,#22D3EE);
+  --fd:'Space Grotesk',sans-serif; --fb:'Inter',system-ui,sans-serif; --fm:'JetBrains Mono',monospace;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:var(--fb);line-height:1.65;overflow-x:hidden}
+a{color:inherit;text-decoration:none}
+body::before{content:'';position:fixed;inset:0;z-index:-2;background:
+  radial-gradient(900px 520px at 85% -10%,rgba(79,124,255,.16),transparent 60%),
+  radial-gradient(700px 450px at -10% 30%,rgba(34,211,238,.09),transparent 60%)}
+body::after{content:'';position:fixed;inset:0;z-index:-1;background-image:
+  linear-gradient(rgba(255,255,255,.028) 1px,transparent 1px),
+  linear-gradient(90deg,rgba(255,255,255,.028) 1px,transparent 1px);background-size:44px 44px;
+  -webkit-mask-image:radial-gradient(ellipse at 50% 0%,#000 30%,transparent 72%);
+  mask-image:radial-gradient(ellipse at 50% 0%,#000 30%,transparent 72%)}
+.wrap{max-width:1180px;margin:0 auto;padding:0 28px}
+.grad-text{background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+
+/* ===== Header ===== */
+.site-head{position:sticky;top:0;z-index:50;background:rgba(7,11,20,.78);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-bottom:1px solid var(--border)}
+.head-in{display:flex;align-items:center;justify-content:space-between;height:72px;gap:20px}
+.logo{display:flex;align-items:center;gap:10px;font-family:var(--fd);font-weight:700;font-size:21px;letter-spacing:.2px;flex-shrink:0}
+.logo svg{width:28px;height:28px}
+.nav{display:flex;gap:28px}
+.nav a{color:var(--muted);font-size:14.5px;font-weight:500;transition:.2s}
+.nav a:hover{color:var(--cyan)}
+.head-actions{display:flex;align-items:center;gap:10px}
+.btn-ghost{display:inline-flex;align-items:center;gap:8px;padding:9px 18px;border-radius:11px;border:1px solid var(--border);background:transparent;color:var(--text);font-weight:600;font-size:14px;font-family:var(--fb);cursor:pointer;transition:.25s}
+.btn-ghost:hover{border-color:rgba(79,124,255,.55);background:rgba(79,124,255,.08)}
+.btn-grad{display:inline-flex;align-items:center;justify-content:center;gap:9px;padding:10px 20px;border-radius:11px;background:var(--grad);color:#fff;font-weight:700;font-size:14px;font-family:var(--fb);cursor:pointer;border:none;transition:.25s}
+.btn-grad:hover{transform:translateY(-2px);box-shadow:0 10px 26px rgba(79,124,255,.38)}
+
+/* ===== Hero ===== */
+.hero{padding:96px 0 80px;position:relative}
+.hero-grid{display:grid;grid-template-columns:1.08fr .92fr;gap:56px;align-items:center}
+.hero-badge{display:inline-flex;align-items:center;gap:9px;padding:7px 15px;border-radius:999px;border:1px solid rgba(79,124,255,.35);background:rgba(79,124,255,.08);color:#A8BCFF;font-family:var(--fm);font-size:12.5px;letter-spacing:.3px}
+.hero-badge i{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 10px var(--green);flex-shrink:0}
+.hero h1{font-family:var(--fd);font-size:clamp(38px,5.4vw,66px);line-height:1.06;letter-spacing:-1.5px;margin:24px 0 20px}
+.hero .lead{color:var(--muted);font-size:17.5px;max-width:560px}
+.hero .lead b{color:var(--text);font-weight:600}
+.hero-cta{display:flex;align-items:center;gap:14px;margin-top:36px;flex-wrap:wrap}
+.btn-lg{padding:15px 28px;border-radius:13px;font-size:15.5px}
+.hero-note{display:flex;align-items:center;gap:8px;margin-top:24px;color:var(--muted);font-family:var(--fm);font-size:12.5px;flex-wrap:wrap}
+.hero-note b{color:#C6CFDD;font-weight:600}
+
+/* Vault mock card */
+.mock-zone{position:relative}
+.mock-glow{position:absolute;inset:-60px;background:radial-gradient(circle at 60% 40%,rgba(79,124,255,.25),transparent 65%);filter:blur(10px);pointer-events:none}
+.mock{position:relative;background:linear-gradient(160deg,rgba(255,255,255,.055),rgba(255,255,255,.02));border:1px solid var(--border);border-radius:20px;padding:22px;box-shadow:0 30px 80px rgba(0,0,0,.45)}
+.mock-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+.mock-dots{display:flex;gap:7px}
+.mock-dots i{width:10px;height:10px;border-radius:50%;background:rgba(255,255,255,.14)}
+.mock-dots i:first-child{background:rgba(248,113,113,.55)}
+.mock-dots i:nth-child(2){background:rgba(251,191,36,.55)}
+.mock-dots i:last-child{background:rgba(52,211,153,.55)}
+.mock-title{font-family:var(--fm);font-size:12px;color:var(--muted)}
+.mock-row{display:flex;align-items:center;gap:13px;background:rgba(255,255,255,.035);border:1px solid var(--border);border-radius:13px;padding:13px 15px;margin-bottom:11px}
+.mock-ic{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px;font-family:var(--fd);color:#fff;flex-shrink:0}
+.mock-ic.a{background:linear-gradient(135deg,#4F7CFF,#7C5CFF)}
+.mock-ic.b{background:linear-gradient(135deg,#22D3EE,#4F7CFF)}
+.mock-ic.c{background:linear-gradient(135deg,#34D399,#22D3EE)}
+.mock-info{flex:1;min-width:0}
+.mock-info b{display:block;font-size:14px;font-weight:600;line-height:1.3}
+.mock-info span{display:block;font-size:12px;color:var(--muted);font-family:var(--fm);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mock-pass{font-family:var(--fm);font-size:13px;color:var(--cyan);letter-spacing:1px}
+.mock-ok{width:26px;height:26px;border-radius:8px;background:rgba(52,211,153,.12);border:1px solid rgba(52,211,153,.35);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.mock-ok svg{width:13px;height:13px;stroke:var(--green)}
+.mock-chips{display:flex;gap:9px;margin-top:16px;flex-wrap:wrap}
+.chip{display:inline-flex;align-items:center;gap:7px;font-family:var(--fm);font-size:11.5px;color:#C6CFDD;border:1px solid var(--border);background:rgba(255,255,255,.03);padding:7px 12px;border-radius:999px}
+.chip svg{width:13px;height:13px;stroke:var(--green);flex-shrink:0}
+
+/* ===== Stats strip ===== */
+.stats{border-top:1px solid var(--border);border-bottom:1px solid var(--border);background:rgba(255,255,255,.015)}
+.stats-grid{display:grid;grid-template-columns:repeat(3,1fr)}
+.stat{padding:30px 20px;text-align:center;border-left:1px solid var(--border)}
+.stat:first-child{border-left:none}
+.stat b{display:block;font-family:var(--fd);font-size:clamp(26px,3vw,36px);letter-spacing:-.5px}
+.stat span{color:var(--muted);font-size:13.5px}
+
+/* ===== Sections ===== */
+.sec{padding:92px 0}
+.sec-head{max-width:640px;margin-bottom:52px}
+.kicker{font-family:var(--fm);font-size:12.5px;letter-spacing:2.5px;text-transform:uppercase;color:var(--cyan);display:inline-flex;align-items:center;gap:10px;margin-bottom:14px}
+.kicker::before{content:'';width:26px;height:1px;background:var(--grad)}
+.sec-head h2{font-family:var(--fd);font-size:clamp(28px,3.4vw,42px);letter-spacing:-1px;line-height:1.15;margin-bottom:14px}
+.sec-head p{color:var(--muted);font-size:16px}
+.features-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+.feat{background:var(--card);border:1px solid var(--border);border-radius:17px;padding:27px;transition:.3s}
+.feat:hover{transform:translateY(-5px);border-color:rgba(79,124,255,.45);background:rgba(79,124,255,.05)}
+.feat-ic{width:46px;height:46px;border-radius:13px;display:flex;align-items:center;justify-content:center;margin-bottom:18px;background:rgba(79,124,255,.1);border:1px solid rgba(79,124,255,.3)}
+.feat-ic svg{width:22px;height:22px;stroke:var(--cyan)}
+.feat h3{font-family:var(--fd);font-size:18px;margin-bottom:9px;letter-spacing:-.2px}
+.feat p{color:var(--muted);font-size:14.5px}
+
+/* How it works */
+.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+.step{position:relative;background:var(--card);border:1px solid var(--border);border-radius:17px;padding:30px 27px;transition:.3s}
+.step:hover{border-color:rgba(34,211,238,.4);transform:translateY(-4px)}
+.step-num{font-family:var(--fm);font-size:13px;color:var(--cyan);letter-spacing:1.5px;display:block;margin-bottom:14px}
+.step h3{font-family:var(--fd);font-size:19px;margin-bottom:10px}
+.step p{color:var(--muted);font-size:14.5px}
+
+/* Security band */
+.sec-band{background:linear-gradient(140deg,rgba(79,124,255,.1),rgba(34,211,238,.05));border:1px solid rgba(79,124,255,.25);border-radius:24px;padding:52px;display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:center}
+.sec-band h2{font-family:var(--fd);font-size:clamp(26px,3vw,36px);letter-spacing:-.8px;margin-bottom:16px}
+.sec-band .sec-txt p{color:var(--muted);font-size:15.5px}
+.check-list{display:flex;flex-direction:column;gap:15px;margin-top:8px}
+.check-list span{display:flex;align-items:flex-start;gap:12px;font-size:15px;color:#C6CFDD}
+.check-list svg{width:20px;height:20px;stroke:var(--green);flex-shrink:0;margin-top:2px}
+.lock-art{display:flex;align-items:center;justify-content:center}
+.lock-art svg{width:200px;height:200px;filter:drop-shadow(0 0 40px rgba(79,124,255,.45))}
+
+/* CTA band */
+.cta-band{margin:0 0 92px;background:linear-gradient(120deg,rgba(79,124,255,.16),rgba(34,211,238,.08));border:1px solid rgba(79,124,255,.3);border-radius:24px;padding:64px 40px;text-align:center}
+.cta-band h2{font-family:var(--fd);font-size:clamp(28px,3.6vw,44px);letter-spacing:-1px;margin-bottom:14px}
+.cta-band p{color:var(--muted);font-size:16px;max-width:520px;margin:0 auto 32px}
+
+/* Footer */
+footer{border-top:1px solid var(--border);padding:32px 0}
+.foot-in{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.foot-in small{color:var(--muted);font-size:13px}
+.foot-links{display:flex;gap:22px}
+.foot-links a{color:var(--muted);font-size:13px;transition:.2s}
+.foot-links a:hover{color:var(--cyan)}
+
+/* Logged-in user chip (шапка после входа) */
+[hidden]{display:none!important}
+.user-chip{display:flex;align-items:center;gap:9px;border:1px solid rgba(52,211,153,.4);background:rgba(52,211,153,.07);border-radius:999px;padding:5px 15px 5px 6px;max-width:260px}
+.user-chip .avatar{width:29px;height:29px;border-radius:50%;background:var(--grad);display:flex;align-items:center;justify-content:center;font-family:var(--fd);font-weight:700;font-size:13px;color:#fff;flex-shrink:0}
+.user-chip .u-mail{font-size:13px;color:#C6CFDD;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* Reveal on scroll */
+.rv{opacity:0;transform:translateY(26px);transition:opacity .7s ease,transform .7s ease}
+.rv.on{opacity:1;transform:none}
+
+@media(max-width:960px){
+  .nav{display:none}
+  .hero-grid,.sec-band{grid-template-columns:1fr}
+  .hero{padding:64px 0 60px}
+  .mock-zone{max-width:480px}
+  .features-grid,.steps,.stats-grid{grid-template-columns:1fr}
+  .stat{border-left:none;border-top:1px solid var(--border)}
+  .stat:first-child{border-top:none}
+  .sec-band{padding:34px}
+  .btn-head-login{display:none}
+  .user-chip .u-mail{display:none}
+  .user-chip{padding:5px}
+}
+</style>
+</head>
+<body>
+
+<!-- ===== Header ===== -->
+<header class="site-head">
+  <div class="wrap head-in">
+    <a class="logo" href="index.html">
+      <svg viewBox="0 0 24 24" fill="none"><path d="M12 2l8 3v6c0 5-3.4 9.4-8 11-4.6-1.6-8-6-8-11V5l8-3z" fill="url(#lg1)"/><path d="M12 8.5a2 2 0 0 0-2 2c0 .9.6 1.6 1.4 1.9L11 16h2l-.4-3.6c.8-.3 1.4-1 1.4-1.9a2 2 0 0 0-2-2z" fill="#fff"/><defs><linearGradient id="lg1" x1="4" y1="2" x2="20" y2="22"><stop stop-color="#4F7CFF"/><stop offset="1" stop-color="#22D3EE"/></linearGradient></defs></svg>
+      Lock<span class="grad-text">Box</span>
+    </a>
+    <nav class="nav">
+      <a href="#features">Возможности</a>
+      <a href="#how">Как это работает</a>
+      <a href="#security">Безопасность</a>
+    </nav>
+    <div class="head-actions" id="headActions">
+      <a class="btn-ghost btn-head-login" href="join.html">Войти</a>
+      <a class="btn-grad" id="headCta" href="join.html#register">Создать хранилище</a>
+      <div class="user-chip" id="userChip" hidden title="Вы вошли как">
+        <span class="avatar" id="headAvatar">?</span>
+        <span class="u-mail" id="headEmail">…</span>
+      </div>
+      <a class="btn-grad" id="headVault" href="vault.html" hidden>Открыть хранилище</a>
+      <button class="btn-ghost" id="headLogout" type="button" hidden>Выйти</button>
+    </div>
+  </div>
+</header>
+
+<!-- ===== Hero ===== -->
+<section class="hero">
+  <div class="wrap hero-grid">
+    <div>
+      <span class="hero-badge"><i></i>ZERO-KNOWLEDGE ШИФРОВАНИЕ · AES-256</span>
+      <h1>Один ключ.<br><span class="grad-text">Тысячи замков.</span></h1>
+      <p class="lead">Все пароли — в одном зашифрованном хранилище, которое открывается <b>только вашим мастер-паролем</b>. Мы не знаем его и физически не можем узнать: шифрование происходит прямо на вашем устройстве.</p>
+      <div class="hero-cta">
+        <a class="btn-grad btn-lg" id="heroCta" href="join.html#register">Создать хранилище — бесплатно</a>
+        <a class="btn-ghost btn-lg" id="heroGhost" href="join.html">У меня есть хранилище</a>
+      </div>
+      <div class="hero-note"><b>AES-256</b> · <b>Zero-Knowledge</b> · <b>2FA</b> · <b>Мониторинг утечек 24/7</b></div>
+    </div>
+    <div class="mock-zone rv">
+      <div class="mock-glow"></div>
+      <div class="mock">
+        <div class="mock-top">
+          <span class="mock-title">lockbox · хранилище</span>
+          <div class="mock-dots"><i></i><i></i><i></i></div>
+        </div>
+        <div class="mock-row">
+          <div class="mock-ic a">G</div>
+          <div class="mock-info"><b>Google</b><span>you@example.com</span></div>
+          <span class="mock-pass">••••••••••</span>
+          <span class="mock-ok"><svg viewBox="0 0 24 24" fill="none" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></span>
+        </div>
+        <div class="mock-row">
+          <div class="mock-ic b">Б</div>
+          <div class="mock-info"><b>Банк</b><span>app.bank.ru</span></div>
+          <span class="mock-pass">••••••••••</span>
+          <span class="mock-ok"><svg viewBox="0 0 24 24" fill="none" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></span>
+        </div>
+        <div class="mock-row">
+          <div class="mock-ic c">W</div>
+          <div class="mock-info"><b>Work</b><span>portal.company.io</span></div>
+          <span class="mock-pass">••••••••••</span>
+          <span class="mock-ok"><svg viewBox="0 0 24 24" fill="none" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></span>
+        </div>
+        <div class="mock-chips">
+          <span class="chip"><svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>Шифрование включено</span>
+          <span class="chip"><svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>2FA активна</span>
+          <span class="chip"><svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>Утечек нет</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== Stats ===== -->
+<div class="stats rv">
+  <div class="wrap stats-grid">
+    <div class="stat"><b class="grad-text">256 бит</b><span>длина ключа шифрования AES</span></div>
+    <div class="stat"><b class="grad-text">0 байт</b><span>данных о вашем пароле на наших серверах</span></div>
+    <div class="stat"><b class="grad-text">24 / 7</b><span>мониторинг утечек даркнета</span></div>
+  </div>
+</div>
+
+<!-- ===== Features ===== -->
+<section class="sec" id="features">
+  <div class="wrap">
+    <div class="sec-head rv">
+      <span class="kicker">Возможности</span>
+      <h2>Всё, чтобы пароли больше не были проблемой</h2>
+      <p>LockBox хранит, генерирует и защищает ваши пароли — а вам остаётся помнить только один мастер-ключ.</p>
+    </div>
+    <div class="features-grid">
+      <div class="feat rv">
+        <div class="feat-ic"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="10" width="16" height="11" rx="3"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg></div>
+        <h3>Шифрование на устройстве</h3>
+        <p>Хранилище шифруется по стандарту AES-256 прямо в вашем браузере. На сервер попадает только зашифрованный бинарный блоб без мастер-пароля.</p>
+      </div>
+      <div class="feat rv">
+        <div class="feat-ic"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><path d="M2 12l10 0"/><circle cx="12" cy="12" r="3"/></svg></div>
+        <h3>Zero-Knowledge архитектура</h3>
+        <p>Мастер-пароль никогда не покидает браузер: ни в открытом виде, ни в виде хеша. Даже мы не можем расшифровать ваше хранилище.</p>
+      </div>
+      <div class="feat rv">
+        <div class="feat-ic"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r=".8"/></svg></div>
+        <h3>Мониторинг даркнета</h3>
+        <p>Хеши ваших паролей сверяются с базами известных утечек 24/7. Если пароль засветился — вы узнаете об этом первым и успеете его сменить.</p>
+      </div>
+      <div class="feat rv">
+        <div class="feat-ic"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="12" rx="3"/><path d="M7 12h.01M11 12h.01M15 12h.01"/></svg></div>
+        <h3>2FA, биометрия и FIDO2</h3>
+        <p>Второй фактор защиты: одноразовые коды TOTP, вход по отпечатку или лицу и аппаратные ключи FIDO2 для максимальной паранойи.</p>
+      </div>
+      <div class="feat rv">
+        <div class="feat-ic"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4L19 9a2.4 2.4 0 0 0-3.4-3.4L5 16.6V20z"/><path d="M13.5 6.5l3.4 3.4"/></svg></div>
+        <h3>Генератор паролей</h3>
+        <p>Криптостойкие пароли любой длины и состава — от PIN-кодов до 64-символьных комбинаций с символами. Ни один не повторится.</p>
+      </div>
+      <div class="feat rv">
+        <div class="feat-ic"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L4.5 13.5H11L9.5 22 19 9.5h-6.5L13 2z"/></svg></div>
+        <h3>Мгновенный поиск</h3>
+        <p>Находите нужную запись за секунды: поиск по названию, сайту и логину срабатывает по мере ввода — без лишних кликов.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== How it works ===== -->
+<section class="sec" id="how" style="padding-top:0">
+  <div class="wrap">
+    <div class="sec-head rv">
+      <span class="kicker">Как это работает</span>
+      <h2>Три шага до порядка в паролях</h2>
+    </div>
+    <div class="steps">
+      <div class="step rv">
+        <span class="step-num">ШАГ 01</span>
+        <h3>Создайте хранилище</h3>
+        <p>Придумайте email и один мастер-пароль — единственный, который нужно запомнить. Регистрация занимает меньше минуты.</p>
+      </div>
+      <div class="step rv">
+        <span class="step-num">ШАГ 02</span>
+        <h3>Добавьте пароли</h3>
+        <p>Перенесите пароли со старых стикеров и блокнотов. Или сгенерируйте новые — по одному уникальному на каждый сервис.</p>
+      </div>
+      <div class="step rv">
+        <span class="step-num">ШАГ 03</span>
+        <h3>Открывайте одним ключом</h3>
+        <p>Вводите мастер-пароль — и весь список логинов и паролей у вас под рукой. Копирование в один клик.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== Security ===== -->
+<section class="sec" id="security" style="padding-top:0">
+  <div class="wrap">
+    <div class="sec-band rv">
+      <div class="sec-txt">
+        <span class="kicker">Безопасность</span>
+        <h2>Мы не знаем ваш пароль.<br>И не сможем узнать.</h2>
+        <p>В основе LockBox — архитектура с нулевым разглашением. Ключ шифрования рождается и умирает на вашем устройстве: мастер-пароль превращается в ключ шифрования локально и никогда не передаётся по сети.</p>
+        <div class="check-list">
+          <span><svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>Мастер-пароль хешируется с солью и никогда не отправляется на сервер</span>
+          <span><svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>Данные шифруются AES-256 до того, как покинут браузер</span>
+          <span><svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>Мастер-пароль невозможно восстановить — только сбросить хранилище</span>
+          <span><svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>Ключ восстановления из 24 слов — на случай, если забыли пароль</span>
+        </div>
+      </div>
+      <div class="lock-art">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M12 2a5 5 0 0 0-5 5v3H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8a2 2 0 0 0-2-2h-1V7a5 5 0 0 0-5-5Zm-3 8V7a3 3 0 1 1 6 0v3H9Z" fill="url(#lg2)"/><path d="M12 10.5a1.8 1.8 0 0 0-.9 3.35L10.8 16h2.4l-.3-2.15A1.8 1.8 0 0 0 12 10.5z" fill="#fff"/><defs><linearGradient id="lg2" x1="4" y1="2" x2="20" y2="22"><stop stop-color="#4F7CFF"/><stop offset="1" stop-color="#22D3EE"/></linearGradient></defs></svg>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== CTA ===== -->
+<div class="wrap">
+  <div class="cta-band rv" id="ctaBand">
+    <h2>Готовы навести порядок<br>в паролях?</h2>
+    <p>Создайте бесплатное хранилище за минуту. Один мастер-пароль — и ни одного забытого логина.</p>
+    <a class="btn-grad btn-lg cta-btn" id="bandCta" href="join.html#register">Создать хранилище — бесплатно</a>
+  </div>
+</div>
+
+<!-- ===== Footer ===== -->
+<footer>
+  <div class="wrap foot-in">
+    <a class="logo" href="index.html" style="font-size:17px">
+      <svg viewBox="0 0 24 24" fill="none" style="width:22px;height:22px"><path d="M12 2l8 3v6c0 5-3.4 9.4-8 11-4.6-1.6-8-6-8-11V5l8-3z" fill="url(#lg3)"/><path d="M12 8.5a2 2 0 0 0-2 2c0 .9.6 1.6 1.4 1.9L11 16h2l-.4-3.6c.8-.3 1.4-1 1.4-1.9a2 2 0 0 0-2-2z" fill="#fff"/><defs><linearGradient id="lg3" x1="4" y1="2" x2="20" y2="22"><stop stop-color="#4F7CFF"/><stop offset="1" stop-color="#22D3EE"/></linearGradient></defs></svg>
+      Lock<span class="grad-text">Box</span>
+    </a>
+    <div class="foot-links">
+      <a href="join.html">Войти</a>
+      <a href="join.html#register">Регистрация</a>
+      <a href="#features">Возможности</a>
+      <a href="#security">Безопасность</a>
+    </div>
+    <small>© <span id="year">2026</span> LockBox · Демо-проект · Данные хранятся локально в браузере</small>
+  </div>
+</footer>
+
+<script>
+// ===== Год в футере =====
+document.getElementById('year').textContent = new Date().getFullYear();
+
+// ===== Сессия: если пользователь вошёл — показываем это на сайте =====
+const LS_SESSION = 'lockbox_session';
+let SESSION = null;
+try { SESSION = JSON.parse(sessionStorage.getItem(LS_SESSION) || localStorage.getItem(LS_SESSION) || 'null'); } catch(e){}
+
+function doLogout(){
+  try { sessionStorage.removeItem(LS_SESSION); localStorage.removeItem(LS_SESSION); } catch(e){}
+  location.reload();
+}
+
+(function(){
+  if (!(SESSION && SESSION.email)) return;
+  const mail = SESSION.email;
+
+  // Шапка: убираем «Войти» и «Создать хранилище», показываем чип пользователя
+  const loginBtn = document.querySelector('.btn-head-login');
+  if (loginBtn) loginBtn.hidden = true;
+  const headCta = document.getElementById('headCta');
+  if (headCta) headCta.hidden = true;
+  ['userChip', 'headVault', 'headLogout'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.hidden = false;
+  });
+  document.getElementById('headAvatar').textContent = mail[0].toUpperCase();
+  document.getElementById('headEmail').textContent = mail;
+  document.getElementById('headLogout').addEventListener('click', doLogout);
+
+  // Бейдж в hero: явное сообщение, что пользователь вошёл
+  const badge = document.querySelector('.hero-badge');
+  if (badge) {
+    badge.textContent = '';
+    const dot = document.createElement('i');
+    badge.append(dot, 'ВЫ ВОШЛИ КАК ' + mail.toUpperCase() + ' · СЕССИЯ АКТИВНА');
+    badge.style.color = '#6EE7B7';
+    badge.style.borderColor = 'rgba(52,211,153,.4)';
+    badge.style.background = 'rgba(52,211,153,.07)';
+  }
+
+  // Кнопки теперь ведут в хранилище, а не на регистрацию
+  const set = (id, txt) => { const el = document.getElementById(id); if (el) { el.textContent = txt; el.setAttribute('href', 'vault.html'); } };
+  set('heroCta', 'Открыть моё хранилище');
+  set('bandCta', 'Открыть хранилище');
+  const ghost = document.getElementById('heroGhost');
+  if (ghost) {
+    ghost.textContent = 'Выйти';
+    ghost.setAttribute('href', '#');
+    ghost.addEventListener('click', e => { e.preventDefault(); doLogout(); });
+  }
+})();
+
+// ===== Появление блоков при прокрутке =====
+const io = new IntersectionObserver(entries => {
+  entries.forEach(en => { if (en.isIntersecting) { en.target.classList.add('on'); io.unobserve(en.target); } });
+}, { threshold: .12 });
+document.querySelectorAll('.rv').forEach(el => io.observe(el));
+</script>
+
+
+</body>
+</html>

@@ -1,0 +1,22 @@
+button {
+    display: inline-block;
+    padding: 12px 20px;
+    border: 0;
+    border-radius: 8px;
+    background: #c54f00a9;
+    color: #e7d8d8;
+    cursor: pointer;
+    font: inherit;
+    font-weight: 600;
+    transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+button:hover {
+    background: #1b5545;
+    transform: translateY(-1px);
+}
+
+button:focus-visible {
+    outline: 3px solid #9bcabb;
+    outline-offset: 3px;
+}
